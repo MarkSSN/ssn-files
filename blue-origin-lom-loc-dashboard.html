@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boots Acceleration 2028 · notional reliability</title>
+<style>
+  :root {
+    --bg: #e7edf2;
+    --ink: #142033;
+    --muted: #5c6b7e;
+    --line: #d3dde6;
+    --card: #f7fafc;
+    --navy: #13283f;
+    --teal: #0f6e6a;
+    --gold: #9a6b12;
+    --red: #9d2c32;
+    --ok: #1d7a46;
+    --shadow: 0 10px 30px rgba(19, 40, 63, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 420px at 8% -10%, #f7e7c8 0%, transparent 55%),
+      radial-gradient(800px 480px at 100% 0%, #d5ebe8 0%, transparent 50%),
+      var(--bg);
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 28px 32px 8px;
+  }
+  .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; color: var(--gold); font-weight: 700; }
+  h1 { margin: 4px 0 0; font-size: 32px; letter-spacing: -0.03em; }
+  h1 span { color: var(--teal); }
+  .sub { max-width: 460px; color: var(--muted); font-size: 14px; line-height: 1.4; text-align: right; }
+  .wrap { padding: 16px 32px 32px; display: grid; grid-template-columns: 280px 1fr 320px; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+  .scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; grid-column: 1 / -1; }
+  .score { padding: 16px 18px; }
+  .score .label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .score .num { font-size: 34px; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; margin-top: 4px; }
+  .score .hint { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .ok { color: var(--ok); }
+  .bad { color: var(--red); }
+  .mid { color: var(--gold); }
+  .side, .events, .factors { padding: 16px; }
+  h2 { margin: 0 0 10px; font-size: 16px; }
+  label.row { display: block; margin: 10px 0; font-size: 13px; color: var(--ink); }
+  label.row span { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  input[type="range"] { width: 100%; accent-color: var(--navy); }
+  select, button {
+    font: inherit;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: white;
+    padding: 8px 10px;
+  }
+  button { cursor: pointer; background: var(--navy); color: white; border: 0; }
+  button.ghost { background: white; color: var(--ink); border: 1px solid var(--line); }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .hist { margin-top: 12px; padding: 10px; background: #eef3f7; border-radius: 10px; font-size: 12px; line-height: 1.4; color: var(--ink); }
+  .hist b { display: block; margin-bottom: 4px; }
+  .phase { margin-top: 14px; }
+  .phase h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
+  .event {
+    display: grid;
+    grid-template-columns: 1.3fr 1.4fr 120px;
+    gap: 12px;
+    align-items: end;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .slider-block { display: flex; flex-direction: column; gap: 2px; }
+  .slider-block .readout {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .slider-block .readout b {
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    color: var(--navy);
+    font-variant-numeric: tabular-nums;
+    text-transform: none;
+  }
+  .slider-block.loc .readout b { color: var(--red); font-size: 16px; }
+  .event input[type="range"] { accent-color: var(--teal); width: 100%; margin: 0; }
+  .bar { height: 10px; background: #e3ebf1; border-radius: 99px; overflow: hidden; display: flex; margin-top: 8px; }
+  .bar i { display: block; height: 100%; }
+  .note { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 10px; }
+  .waterfall { margin-top: 8px; }
+  .wf { display: grid; grid-template-columns: 1fr 70px; gap: 6px; align-items: center; font-size: 12px; margin: 4px 0; }
+  .wf .track { height: 8px; background: #e3ebf1; border-radius: 99px; }
+  .wf .track i { display: block; height: 100%; background: var(--navy); border-radius: 99px; }
+  @media (max-width: 1100px) {
+    .wrap { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; }
+    .sub { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="kicker">Notional model · not a NASA PRA</div>
+    <h1>Blue Origin simpler stack <span>success, LOM, LOC</span></h1>
+  </div>
+  <p class="sub">Crewed Boots Acceleration path: four New Glenn flights, three Mark 1-derived kick stages, one lander, then Orion. Every event starts at 0.99. Failures before the crew boards the lander are loss of mission. Failures after that split between abort and loss of crew.</p>
+</header>
+<div class="wrap">
+  <section class="scores">
+    <article class="card score">
+      <div class="label">Mission success</div>
+      <div class="num ok" id="pSuccess">—</div>
+      <div class="hint" id="successHint">All campaign gates and vehicle events succeed</div>
+    </article>
+    <article class="card score">
+      <div class="label">Loss of mission</div>
+      <div class="num mid" id="pLom">—</div>
+      <div class="hint">Objectives missed, crew survives</div>
+    </article>
+    <article class="card score">
+      <div class="label">Loss of crew</div>
+      <div class="num bad" id="pLoc">—</div>
+      <div class="hint">Crew already committed to the lander, abort fails</div>
+    </article>
+  </section>
+
+  <aside class="card side">
+    <h2>Campaign</h2>
+    <label class="row">Architecture
+      <select id="profile">
+        <option value="crew">Crewed, 4 New Glenn + Orion</option>
+        <option value="demo">Uncrewed demo, 3 New Glenn</option>
+      </select>
+    </label>
+    <label class="row"><span>Weather scrub per attempt <b id="wVal">15%</b></span>
+      <input id="weather" type="range" min="0" max="40" value="15" />
+    </label>
+    <label class="row"><span>Attempts before the window closes <b id="aVal">2</b></span>
+      <input id="attempts" type="range" min="1" max="4" value="2" />
+    </label>
+    <label class="row"><span>Other scrub (range, asset, cryo load) <b id="oVal">5%</b></span>
+      <input id="other" type="range" min="0" max="30" value="5" />
+    </label>
+    <label class="row"><span>Boil-off / loiter expiry if delayed <b id="bVal">8%</b></span>
+      <input id="boil" type="range" min="0" max="40" value="8" />
+    </label>
+    <label class="row"><span>Beta-angle or lighting cutout <b id="betaVal">4%</b></span>
+      <input id="beta" type="range" min="0" max="25" value="4" />
+    </label>
+    <div class="actions">
+      <button id="reset" type="button">Default 0.99</button>
+      <button id="apollo" class="ghost" type="button">Apollo rates</button>
+      <button id="shuttle" class="ghost" type="button">Shuttle rates</button>
+    </div>
+    <div class="hist" id="histNote">Default is a flat 0.99 success on every event. It is not a historical figure.</div>
+  </aside>
+
+  <section class="card events">
+    <h2>Events on the critical path</h2>
+    <div id="events"></div>
+    <p class="note" id="campNote"></p>
+  </section>
+
+  <aside class="card factors">
+    <h2>Where the risk sits</h2>
+    <div class="bar" id="bar"></div>
+    <div class="waterfall" id="waterfall"></div>
+    <p class="note">Partition: success + LOM + LOC = 1. Campaign factors (weather, scrubs, boil-off, beta cutout) are LOM only. They are applied once per rocket in the campaign, not once per burn.</p>
+  </aside>
+</div>
+<script>
+const CREW = [
+  { phase: "Launch campaign", name: "New Glenn, transfer stage 1", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "New Glenn, transfer stage 2", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "New Glenn, transfer stage 3", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "New Glenn, mission lander", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "SLS / Orion ascent", p: 0.99, loc: 0.9 },
+  { phase: "Assembly in LEO", name: "Dock stage 1 to stack", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock stage 2 to stack", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock stage 3 to stack", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock lander to stack", p: 0.99, loc: 0 },
+  { phase: "Earth departure", name: "Stage 1 burn", p: 0.99, loc: 0 },
+  { phase: "Earth departure", name: "Stage 1 separation", p: 0.99, loc: 0 },
+  { phase: "Earth departure", name: "Stage 2 burn to lunar staging", p: 0.99, loc: 0 },
+  { phase: "Crew handover", name: "Rendezvous with Orion", p: 0.99, loc: 0.05 },
+  { phase: "Crew handover", name: "Dock with Orion", p: 0.99, loc: 0.1 },
+  { phase: "Crew handover", name: "Crew ingress and hatch close", p: 0.99, loc: 0.15 },
+  { phase: "Drop to LLO", name: "Stage 3 burn", p: 0.99, loc: 0.7 },
+  { phase: "Drop to LLO", name: "Stage 3 separation", p: 0.99, loc: 0.5 },
+  { phase: "Surface", name: "Powered descent and landing", p: 0.99, loc: 0.85 },
+  { phase: "Surface", name: "Surface stay, power and thermal", p: 0.99, loc: 0.4 },
+  { phase: "Return", name: "Ascent restart", p: 0.99, loc: 0.9 },
+  { phase: "Return", name: "Rendezvous with Orion", p: 0.99, loc: 0.55 },
+  { phase: "Return", name: "Dock and crew egress", p: 0.99, loc: 0.45 },
+  { phase: "Return", name: "Orion departure and entry", p: 0.99, loc: 0.8 }
+];
+const DEMO = [
+  { phase: "Launch campaign", name: "New Glenn, transfer stage 1", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "New Glenn, transfer stage 2", p: 0.99, loc: 0 },
+  { phase: "Launch campaign", name: "New Glenn, lander", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock stage 1", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock stage 2", p: 0.99, loc: 0 },
+  { phase: "Assembly in LEO", name: "Dock lander", p: 0.99, loc: 0 },
+  { phase: "Transit", name: "Stage 1 burn and separation", p: 0.99, loc: 0 },
+  { phase: "Transit", name: "Stage 2 burn to low lunar orbit", p: 0.99, loc: 0 },
+  { phase: "Transit", name: "Stage 2 separation", p: 0.99, loc: 0 },
+  { phase: "Surface", name: "Powered descent and landing", p: 0.99, loc: 0 },
+  { phase: "Surface", name: "Surface checkout", p: 0.99, loc: 0 },
+  { phase: "Return", name: "Ascent to lunar orbit", p: 0.99, loc: 0 }
+];
+
+let events = CREW.map(e => ({...e}));
+
+function rockets() {
+  return document.getElementById("profile").value === "crew" ? 5 : 3;
+}
+
+function campaignSuccess() {
+  const scrub = +document.getElementById("weather").value / 100;
+  const attempts = +document.getElementById("attempts").value;
+  const other = +document.getElementById("other").value / 100;
+  const boil = +document.getElementById("boil").value / 100;
+  const beta = +document.getElementById("beta").value / 100;
+  const missWindow = Math.pow(scrub, attempts);
+  const oneRocket = (1 - missWindow) * (1 - other) * (1 - boil) * (1 - beta);
+  const n = rockets();
+  return { oneRocket, all: Math.pow(oneRocket, n), missWindow, n };
+}
+
+function compute() {
+  const camp = campaignSuccess();
+  let reach = camp.all;
+  let loc = 0;
+  let lom = 1 - camp.all;
+  const rows = [{ name: "Campaign gates", contrib: 1 - camp.all }];
+  events.forEach(ev => {
+    const fail = reach * (1 - ev.p);
+    const locPart = fail * ev.loc;
+    const lomPart = fail * (1 - ev.loc);
+    loc += locPart;
+    lom += lomPart;
+    rows.push({ name: ev.name, contrib: fail });
+    reach *= ev.p;
+  });
+  return { success: reach, loc, lom, rows, camp };
+}
+
+function renderEvents() {
+  const host = document.getElementById("events");
+  host.innerHTML = "";
+  let phase = "";
+  events.forEach((ev, i) => {
+    if (ev.phase !== phase) {
+      phase = ev.phase;
+      const h = document.createElement("div");
+      h.className = "phase";
+      h.innerHTML = "<h3>" + phase + "</h3>";
+      host.appendChild(h);
+    }
+    const row = document.createElement("div");
+    row.className = "event";
+    row.innerHTML =
+      "<div><b>" + ev.name + "</b></div>" +
+      "<div class='slider-block'><div class='readout'><span>Success</span><b class='p-read'>" + ev.p.toFixed(3) + "</b></div>" +
+      "<input type='range' min='90' max='100' step='0.1' value='" + (ev.p * 100) + "' data-i='" + i + "' /></div>" +
+      "<div class='slider-block loc'><div class='readout'><span>LOC if it fails</span><b class='l-read'>" + Math.round(ev.loc * 100) + "%</b></div>" +
+      "<input type='range' min='0' max='100' value='" + Math.round(ev.loc * 100) + "' data-loc='" + i + "' /></div>";
+    host.appendChild(row);
+  });
+  host.querySelectorAll("input[data-i]").forEach(el => {
+    el.addEventListener("input", () => {
+      events[+el.dataset.i].p = +el.value / 100;
+      el.parentElement.querySelector(".p-read").textContent = events[+el.dataset.i].p.toFixed(3);
+      draw();
+    });
+  });
+  host.querySelectorAll("input[data-loc]").forEach(el => {
+    el.addEventListener("input", () => {
+      events[+el.dataset.loc].loc = +el.value / 100;
+      el.parentElement.querySelector(".l-read").textContent = Math.round(events[+el.dataset.loc].loc * 100) + "%";
+      draw();
+    });
+  });
+}
+
+function draw() {
+  const r = compute();
+  document.getElementById("pSuccess").textContent = (r.success * 100).toFixed(2) + "%";
+  document.getElementById("pLom").textContent = (r.lom * 100).toFixed(2) + "%";
+  document.getElementById("pLoc").textContent = (r.loc * 100).toFixed(2) + "%";
+  document.getElementById("wVal").textContent = document.getElementById("weather").value + "%";
+  document.getElementById("aVal").textContent = document.getElementById("attempts").value;
+  document.getElementById("oVal").textContent = document.getElementById("other").value + "%";
+  document.getElementById("bVal").textContent = document.getElementById("boil").value + "%";
+  document.getElementById("betaVal").textContent = document.getElementById("beta").value + "%";
+  const c = r.camp;
+  document.getElementById("campNote").textContent =
+    "One rocket clears weather, scrub, boil-off and beta gates with probability " +
+    (c.oneRocket * 100).toFixed(1) + "%. Across " + c.n + " rockets that becomes " +
+    (c.all * 100).toFixed(1) + "%. Window miss per rocket is " + (c.missWindow * 100).toFixed(1) + "%.";
+  document.getElementById("bar").innerHTML =
+    "<i style='width:" + (r.success * 100) + "%;background:#1d7a46'></i>" +
+    "<i style='width:" + (r.lom * 100) + "%;background:#9a6b12'></i>" +
+    "<i style='width:" + (r.loc * 100) + "%;background:#9d2c32'></i>";
+  const top = r.rows.slice().sort((a, b) => b.contrib - a.contrib).slice(0, 6);
+  const max = top[0] ? top[0].contrib : 1;
+  document.getElementById("waterfall").innerHTML = top.map(row =>
+    "<div class='wf'><div>" + row.name + "</div><div class='track'><i style='width:" + (max ? row.contrib / max * 100 : 0) + "%'></i></div></div>"
+  ).join("");
+}
+
+document.getElementById("profile").addEventListener("change", () => {
+  const src = document.getElementById("profile").value === "crew" ? CREW : DEMO;
+  events = src.map(e => ({...e}));
+  renderEvents();
+  draw();
+});
+["weather", "attempts", "other", "boil", "beta"].forEach(id => {
+  document.getElementById(id).addEventListener("input", draw);
+});
+function applyRates(table, note) {
+  events.forEach(ev => {
+    const hit = table.find(row => row.test.test(ev.name));
+    if (hit) {
+      ev.p = hit.p;
+      ev.loc = hit.loc;
+    } else {
+      ev.p = 0.99;
+      ev.loc = ev.loc;
+    }
+  });
+  document.getElementById("histNote").textContent = note;
+  renderEvents();
+  draw();
+}
+
+document.getElementById("reset").addEventListener("click", () => {
+  events.forEach(e => { e.p = 0.99; });
+  document.getElementById("histNote").textContent = "Default is a flat 0.99 success on every event. It is not a historical figure.";
+  renderEvents();
+  draw();
+});
+document.getElementById("apollo").addEventListener("click", () => {
+  applyRates([
+    { test: /SLS|New Glenn/i, p: 1, loc: 0.9 },
+    { test: /Dock/i, p: 0.995, loc: 0.1 },
+    { test: /separation/i, p: 1, loc: 0.2 },
+    { test: /burn/i, p: 1, loc: 0.5 },
+    { test: /descent|landing/i, p: 1, loc: 0.7 },
+    { test: /Ascent/i, p: 1, loc: 0.9 },
+    { test: /entry|departure/i, p: 0.99, loc: 0.5 },
+    { test: /Surface stay/i, p: 1, loc: 0.2 }
+  ], "Apollo empirical, crewed lunar campaign: Saturn V crewed launches 10/10 reached orbit. Landing attempts 6/6, ascent 6/6. Apollo 13 was a loss of mission with no landing attempt and no loss of crew, so 1 LOM in 7 landing-series missions and 0 LOC. Sliders at 1.00 are observed rates, not a claim the next flight cannot fail. Apollo 14 docking needed extra attempts. Apollo 15 lost one parachute and still landed safely.");
+});
+document.getElementById("shuttle").addEventListener("click", () => {
+  applyRates([
+    { test: /New Glenn|SLS/i, p: 0.993, loc: 0.9 },
+    { test: /Dock/i, p: 0.995, loc: 0.15 },
+    { test: /separation/i, p: 0.993, loc: 0.4 },
+    { test: /burn/i, p: 0.993, loc: 0.6 },
+    { test: /descent|landing/i, p: 0.993, loc: 0.7 },
+    { test: /Ascent/i, p: 0.993, loc: 0.85 },
+    { test: /entry|departure/i, p: 0.993, loc: 0.9 },
+    { test: /Surface stay/i, p: 0.995, loc: 0.3 }
+  ], "Shuttle empirical: 135 flights, 2 losses of crew and vehicle. Challenger on ascent, Columbia on entry. That is 2/135, about 1.5% LOC and LOM per flight, or 1 in 68. Late Shuttle PRA put mean loss of crew and vehicle near 1 in 85. Ascent vehicle success here is 134/135 = 0.993. Shuttle never landed on the Moon, so descent and lunar ascent reuse the flight-loss rate as an analogue only.");
+});
+renderEvents();
+draw();
+</script>
+</body>
+</html>
